@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Built-By: salim
+Build-Jdk: 17.0.1
+Implementation-Title: AskMore
+Implementation-Version: 0.0.1-SNAPSHOT
+Implementation-Vendor-Id: io.KhamInfo
+Implementation-URL: https://projects.spring.io/spring-boot/#/spring-boot
+ -starter-parent/AskMore
+Created-By: Maven Integration for Eclipse
+
