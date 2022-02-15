@@ -30,7 +30,7 @@ public class ScriptToDropBox implements Runnable {
 	public void run() {
 		while (true) {
 			try {
-				Thread.sleep(60000);
+				Thread.sleep(30000);
              if(!change)
             	 continue;
        		 File dump = new File("schema2.sql");

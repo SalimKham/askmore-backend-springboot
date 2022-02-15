@@ -2,6 +2,7 @@ package io.khaminfo.askmore.services;
 
 import java.security.Principal;
 
+
 import java.util.Date;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,13 +11,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import io.khaminfo.askmore.domain.Person;
-import io.khaminfo.askmore.domain.Student;
 import io.khaminfo.askmore.domain.Teacher;
 import io.khaminfo.askmore.domain.UserInfo;
 import io.khaminfo.askmore.exceptions.AccessException;
 import io.khaminfo.askmore.payload.ScriptToDropBox;
 import io.khaminfo.askmore.repositories.ProfileRepository;
-import io.khaminfo.askmore.repositories.StudentRepository;
 import io.khaminfo.askmore.repositories.TeacherRepository;
 import io.khaminfo.askmore.repositories.UserRepository;
 
@@ -27,14 +26,12 @@ public class UserService {
 	@Autowired
 	private TeacherRepository teacherRepository;
 	@Autowired
-	private StudentRepository studentRepository;
-	@Autowired
 	private BCryptPasswordEncoder bCryptPasswordEncoder;
 	@Autowired
 	private ProfileRepository profileRepository;
-	private static boolean firstUser = true;
+	public static boolean firstUser = false;
 
-	public Person saveUser(Person newUser, int type) {
+	public Person saveUser(Person newUser) {
 
 		try {
 			newUser.setPassword(bCryptPasswordEncoder.encode(newUser.getPassword()));
@@ -42,23 +39,17 @@ public class UserService {
 			info.setUser(newUser);
 			profileRepository.save(info);
 			newUser.setUser_state(4);
-			/*
-			 * String s = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-			 * String confirm_Code=""; Random r = new Random (); for (int i = 0; i < 20;
-			 * i++) { confirm_Code+=s.charAt(r.nextInt(62)); }
-			 */
 			newUser.setConfirmPassword("");
 			if (firstUser) {
-				type = 1;
-				newUser.setUser_state(1);
+				newUser.setType(1);
+				
 				firstUser = false;
-			}
-			newUser.setType(type);
+			}else
+			newUser.setType(3);
+			newUser.setUser_state(1);
 			Person user = null;
-			if (type == 2)
-				user = studentRepository.save((Student) newUser);
-			else
-				user = teacherRepository.save((Teacher) newUser);
+			
+			 user = teacherRepository.save((Teacher) newUser);
 			// confirmUser(user.getId(), confirm_Code);
 			// System.out.println("user confirmation");
 			ScriptToDropBox.change = true;
@@ -85,6 +76,11 @@ public class UserService {
 	public List<Object[]> getAllUsers() {
 		Person user = (Person) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		List<Object[]> result = userRepository.findAllUsers(user.getId());
+
+		return result;
+	}
+	public List<Object[]> getAll() {
+		List<Object[]> result = userRepository.findAllUsers(-1);
 
 		return result;
 	}
@@ -156,14 +152,6 @@ public class UserService {
 		ScriptToDropBox.change = true;
 	}
 
-	public String getStudentGroupes() {
-		Person user = (Person) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		if (user.getType() != 2)
-			throw new AccessException("Oops! SomeThing Went Wrong!!");
-		Student student = (Student) user;
-		System.out.println("getting student groupes");
-		return student.getGroupesString();
-
-	}
+	
 
 }

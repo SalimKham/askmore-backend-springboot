@@ -3,6 +3,7 @@ package io.khaminfo.askmore.services;
 import java.security.Principal;
 
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import io.khaminfo.askmore.domain.Groupe;
 import io.khaminfo.askmore.domain.Person;
-import io.khaminfo.askmore.domain.Student;
 import io.khaminfo.askmore.domain.Teacher;
 import io.khaminfo.askmore.exceptions.AccessException;
 import io.khaminfo.askmore.payload.ScriptToDropBox;
@@ -39,8 +39,14 @@ public class GroupeService {
 		}
 		try {
 
-			groupe.setOwner((Teacher) user);
+			groupe.setOwner( user.getId());
+			groupe.setState(1);
+			groupe.setUsers(user.getId()+","+user.getUsername()+"/");
+			groupe.setAcceptedUsers(user.getId()+"/");
 			Groupe gr = groupeRepository.save(groupe);
+			Teacher t = teacherRepository.getById(user.getId());
+			t.setJoinedGroupes(t.getJoinedGroupes()+""+groupe.getId()+"/");
+			teacherRepository.save(t);
 			ScriptToDropBox.change = true;
 			return gr;
 		} catch (Exception e) {
@@ -50,14 +56,15 @@ public class GroupeService {
 
 	}
 
-	public Iterable<Student> getAllStudentByGroupe(long id) {
+	public Iterable<Person> getAllUsersByGroupe(long id) {
 
 		try {
 
 			Groupe groupe = groupeRepository.getById(id);
 			if (groupe == null)
 				throw new AccessException("No Groupe Found");
-			return groupe.getStudents();
+			String users =  "("+groupe.getUsers().replaceAll("/", ",")+")";
+			return userRepository.getUsersByIds(users);
 		} catch (Exception e) {
 			throw new AccessException("SomeThingWentWrong");
 		}
@@ -71,94 +78,80 @@ public class GroupeService {
 	public void deleteGroupe(long id, Principal principal) {
 		// TODO Auto-generated method stub
 		Person user = userRepository.findByUsername(principal.getName());
-		boolean access = true;
-		switch (user.getType()) {
-
-		case 3:
-			Groupe groupe = groupeRepository.getById(id);
-			if (groupe.getOwner().getId() != user.getId())
-				access = false;
-			break;
-		case 2:
-			access = false;
-			break;
-
-		default:
-			break;
-		}
-
-		if (!access)
-			throw new AccessException("Access Denied!!!!");
+		Groupe groupe = groupeRepository.getById(id);
+		if(groupe == null)
+			throw new AccessException("Something went wrong");
+		if (groupe.getOwner()!= user.getId())
+			throw new AccessException("NO ACESS!");
 
 		groupeRepository.deleteById(id);
 		ScriptToDropBox.change = true;
 	}
 
-	public void acceptStudentInGroupe(long id, long id_student, Principal principal) {
+	public Groupe acceptStudentInGroupe(long id, long id_student) {
 		// TODO Auto-generated method stub
 		System.out.println("Now we are here");
 		Person user = (Person) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		
-		if (user.getType() != 2) {
-			System.out.println("correct type");
+		
 			Groupe groupe = groupeRepository.getById(id);
-			if (groupe.getOwner().getId() != user.getId())
+			if (groupe.getOwner()!= user.getId())
 				throw new AccessException("Access Denied!!!!");
-			System.out.println("before setting the list");
-			String newList = groupe.getAcceptedStudents() + "/" + id_student;
-			System.out.println("here we are");
-			System.out.println(newList);
+			String newList = groupe.getAcceptedUsers() +   id_student+"/";
+			groupe.setAcceptedUsers(newList);
+			Teacher t = teacherRepository.getById(id_student);
+			if(t == null){
+				throw new AccessException("SomeThing Went Wrong");
+			}
+			t.setJoinedGroupes(t.getJoinedGroupes()+""+groupe.getId()+"/");
+			teacherRepository.save(t);
 			if (groupeRepository.updateAcceptedStudent(id, newList) != 1)
 				throw new AccessException("No groupe Found");
 			ScriptToDropBox.change = true;
-		}
+			return groupe;
+			
+		
 
 	}
 
-	public String JoinGroupe(long id_groupe) {
+	public Groupe JoinGroupe(long id_groupe) {
 		Person user = (Person) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		if (user.getType() == 2) {
+		if (user.getType() == 3) {
 			Groupe groupe = groupeRepository.getById(id_groupe);
-			Student student = (Student) user;
-			groupe.getStudents().add(student);
+			 if(groupe == null)
+				 throw new AccessException("Oops! Something went Wrong.");
+			groupe.setUsers(groupe.getUsers() +user.getId()+","+user.getUsername()+"/");
 			groupe.setNbr_users(groupe.getNbr_users()+1);
 			groupeRepository.save(groupe);
 			ScriptToDropBox.change = true;
-			return student.getGroupesString()+id_groupe+"/";
+			return groupe;
 		}
-		throw new AccessException("Oops! Something went Wrong.");
 		
+		throw new AccessException("Oops! Something went Wrong.");
 	}
 
-	public void leaveGroupe(long id_groupe, long idStudent) {
-		Person user = (Person) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		long id = idStudent;
-		if (user.getType() == 2) {
-			Student student = (Student) user;
-			id = student.getId();
-		}
-
-		if (id == -1)
-			return;
+	public Groupe leaveGroupe(long id_groupe, long idUser) {
+		Teacher t = teacherRepository.getById(idUser);
 		Groupe groupe = groupeRepository.getById(id_groupe);
-   
-		List<Student> it = groupe.getStudents();
-		int index = 0;
-		for (Student st : it) {
-			if (st.getId() == id) {
-				it.remove(index);
-				break;
-			}
-			index++;
-
-		}
+		Person user = (Person) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+       if(t == null) {
+    	   throw new AccessException("Something went wrong!");
+       }
+       if(t.getId() != user.getId() && groupe.getOwner() != user.getId())
+    	   throw new AccessException("NO ACCESS!");
+       
+		String groupeUsers = groupe.getUsers().replace(idUser+","+t.getUsername()+"/", "");
+	    groupe.setUsers(groupeUsers);
          groupe.setNbr_users(groupe.getNbr_users() - 1);
-		if (groupe.getAcceptedStudents() != null) {
-			groupe.getAcceptedStudents().replace("" + id, "");
+		if (groupe.getAcceptedUsers() != null) {
+			groupe.setAcceptedUsers(groupe.getAcceptedUsers().replace( idUser+"/", ""));
 		}
 		groupeRepository.save(groupe);
+		
+		t.setJoinedGroupes(t.getJoinedGroupes().replace(id_groupe+"/", ""));
+		teacherRepository.save(t);
 		ScriptToDropBox.change = true;
-
+       return groupe;
 	}
 
 	public void updateState(long id, int newState, Principal principal) {
@@ -173,7 +166,7 @@ public class GroupeService {
 
 		case 3:
 			Groupe groupe = groupeRepository.getById(id);
-			if (groupe.getOwner().getId() != user.getId())
+			if (groupe.getOwner()!= user.getId())
 				access = false;
 			break;
 		case 2:
@@ -195,16 +188,8 @@ public class GroupeService {
 	public Iterable<Groupe> getTeacherGroupes() {
 		Person user = (Person) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		if (user.getType() == 3) {
-			Teacher teacher = teacherRepository.getById(user.getId());
-			List<Groupe> groupes =  teacher.getGroupes();
-			List<Groupe> result = new ArrayList<>();
-	        
-	        for (Groupe groupe: groupes) {
-	            if (groupe.getState() == 1) {
-	                result.add(groupe);
-	            }
-	        }
-			return result;
+			List<Groupe> groupes =  groupeRepository.getByOwnerId(user.getId());
+			return groupes;
 		}
 		return null;
 	}

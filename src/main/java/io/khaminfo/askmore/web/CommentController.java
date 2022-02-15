@@ -36,7 +36,7 @@ public class CommentController {
 	@PostMapping("/add/{idEvent}")
 	public ResponseEntity<?> addComment(@Valid @RequestBody Comment comment, @PathVariable long idEvent, BindingResult result)
 			throws JsonParseException, JsonMappingException, IOException {
-		// validator.validate(user, result);
+		 System.out.println("adding comment "+idEvent);
 		
 
 		ResponseEntity<?> mappErr = mapErrorService.MapValidationService(result);

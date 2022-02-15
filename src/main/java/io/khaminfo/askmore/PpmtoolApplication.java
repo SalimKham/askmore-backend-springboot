@@ -27,6 +27,7 @@ import com.dropbox.core.v2.DbxClientV2;
 import com.dropbox.core.v2.files.FileMetadata;
 
 import io.khaminfo.askmore.payload.ScriptToDropBox;
+import io.khaminfo.askmore.services.UserService;
 
 @EnableAsync
 @SpringBootApplication
@@ -73,6 +74,11 @@ public class PpmtoolApplication {
 			myThread.setJdbc(jdbc);
 			new Thread(myThread).start();
 			System.out.println("Thread started");
+			UserService service = applicationContext.getBean(UserService.class);
+			if(service.getAll().size() == 0) {
+				System.out.println("first time");
+				UserService.firstUser = true;
+			}
 			}
 		}
 		// exception handled

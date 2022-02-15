@@ -41,7 +41,11 @@ public interface UserRepository extends CrudRepository<Person, Long>{
   @Query("update Person u set u.last_Visit_date = :date where u.username = :name")
   int updateVisitDate(  @Param("date") Date visit_date,@Param("name") String name) ;
   
-  @Query("select u.id, u.username,u.email,u.user_state,u.type,u.userInfo.photo , u.nbr_added , u.last_Visit_date from Person u  where u.id <> :id  ")
+ 
+  @Query("select u from Person u  where u.id IN :users ")
+  List<Person> getUsersByIds( @Param("users") String users);
+  
+  @Query("select u.id, u.username,u.email,u.user_state,u.type,u.userInfo.photo , u.nbr_added , u.last_Visit_date from Person u  where u.id <> :id ")
   List<Object[]> findAllUsers( @Param("id") long id);
 }
 

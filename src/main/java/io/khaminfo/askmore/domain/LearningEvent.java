@@ -44,20 +44,9 @@ public class LearningEvent {
 	@JsonIgnore
 	private List<Comment> comments = new ArrayList<>();
 	
-	@ManyToMany(fetch = FetchType.EAGER)
-	@JoinTable(name = "groupe_event",
-			joinColumns = { @JoinColumn(name = "event_id")  },
-			inverseJoinColumns = { @JoinColumn(name = "groupe_id") })
-	
-	private List<Groupe> allowedGroupes = new ArrayList<>();
+	private String allowedGroupes = "";
 	
 	
-	public List<Groupe> getAllowedGroupes() {
-		return allowedGroupes;
-	}
-	public void setAllowedGroupes(List<Groupe> allowedGroupes) {
-		this.allowedGroupes = allowedGroupes;
-	}
 	public List<Comment> getComments() {
 		return comments;
 	}
@@ -102,6 +91,12 @@ public class LearningEvent {
 	}
 	public void setTeacher(Teacher teacher) {
 		this.teacher = teacher;
+	}
+	public String getAllowedGroupes() {
+		return allowedGroupes;
+	}
+	public void setAllowedGroupes(String allowedGroupes) {
+		this.allowedGroupes = allowedGroupes;
 	}
 
 }

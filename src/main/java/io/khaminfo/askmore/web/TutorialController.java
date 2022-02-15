@@ -61,11 +61,14 @@ public class TutorialController {
 		 return null;
 	}
 	
-	@GetMapping("/all")
-	public ResponseEntity<?> getAllTutorials() {
-		return new ResponseEntity<Iterable<Tutorial>>( tutorialService.getAll(),HttpStatus.OK);
+	@GetMapping("/all/{subjectID}/{page}/{range}")
+	public ResponseEntity<?> getAllTutorials(@PathVariable long subjectID,@PathVariable int page,@PathVariable int range) {
+		return new ResponseEntity<Iterable<Tutorial>>( tutorialService.getAll(subjectID,page,range),HttpStatus.OK);
 	}
-	
+	@GetMapping("/total")
+	public ResponseEntity<Long> getAllTutorials() {
+		return new ResponseEntity<Long>( tutorialService.totalNBR(),HttpStatus.OK);
+	}
 	@DeleteMapping("/deleteQuestionnary/{id}")
 	public void deleteQuestionnary(@PathVariable long id){
 	       tutorialService.deleteQuestionnary(id);

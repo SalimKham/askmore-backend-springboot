@@ -1,5 +1,7 @@
 package io.khaminfo.askmore.repositories;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -22,7 +24,10 @@ public interface GroupeRepository extends CrudRepository<Groupe, Long> {
 	
 	  @Modifying
 	  @Transactional
-	  @Query("update Groupe g set g.acceptedStudents = :value where g.id = :id ")
+	  @Query("update Groupe g set g.acceptedUsers = :value where g.id = :id ")
 	int updateAcceptedStudent( @Param("id") long id , @Param("value") String value);
+
+	  @Query("select g from Groupe g  where g.owner = :id ")
+    List<Groupe> getByOwnerId(Long id);
 
 }

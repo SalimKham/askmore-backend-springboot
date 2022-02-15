@@ -2,6 +2,8 @@ package io.khaminfo.askmore.web;
 
 import java.io.IOException;
 
+
+
 import java.util.List;
 
 import javax.validation.Valid;
@@ -26,7 +28,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.khaminfo.askmore.domain.Person;
-import io.khaminfo.askmore.domain.Student;
 import io.khaminfo.askmore.domain.Teacher;
 import io.khaminfo.askmore.payload.JWTLoginSuccessResponse;
 import io.khaminfo.askmore.payload.LoginRequest;
@@ -65,17 +66,14 @@ public class UserController {
 		return ResponseEntity.ok(new JWTLoginSuccessResponse(true, jwt));
 	}
 
-	@PostMapping("/register/{type}")
-	public ResponseEntity<?> registerUser(@Valid @RequestBody String req, @PathVariable int type, BindingResult result)
+	@PostMapping("/register/")
+	public ResponseEntity<?> registerUser(@Valid @RequestBody String req, BindingResult result)
 			throws JsonParseException, JsonMappingException, IOException {
 		// validator.validate(user, result);
 		
 		Person user = null;
 		ObjectMapper mapper = new ObjectMapper();
-
-		if (type == 2)
-			user = mapper.readValue(req, Student.class);
-		else
+     
 			user = mapper.readValue(req, Teacher.class);
 
 		validator.validate(user, result);
@@ -83,7 +81,7 @@ public class UserController {
 		if (mappErr != null)
 			return mappErr;
       
-		return new ResponseEntity<Person>(userService.saveUser(user, type), HttpStatus.CREATED);
+		return new ResponseEntity<Person>(userService.saveUser(user), HttpStatus.CREATED);
 	}
 
 	@PostMapping("/confirm/{id}/{code}")
@@ -100,11 +98,7 @@ public class UserController {
 		userService.logoutUser(username);	
 		return new ResponseEntity<>( HttpStatus.OK);
 	}
-	@GetMapping("/StudentGroupes")
-	public ResponseEntity<?> getStudentGroupes() {
-		return new ResponseEntity<String>( userService.getStudentGroupes(),HttpStatus.OK);
-	}
-	
+
 	@GetMapping("/all")
 	public ResponseEntity<?> getAllUsers() {
 		return new ResponseEntity<List<Object[]>>( userService.getAllUsers(),HttpStatus.OK);

@@ -5,6 +5,7 @@ import java.security.Principal;
 
 
 
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.khaminfo.askmore.domain.Groupe;
-import io.khaminfo.askmore.domain.Student;
+import io.khaminfo.askmore.domain.Person;
+import io.khaminfo.askmore.domain.Teacher;
 import io.khaminfo.askmore.services.GroupeService;
 import io.khaminfo.askmore.services.MapValidationErrorService;
 
@@ -70,20 +72,20 @@ public class GroupeController {
 	
 	@PostMapping("/acceptStudent/{idGroupe}/{idStudent}")
 	public ResponseEntity<?> acceptStudent(@PathVariable long idGroupe , @PathVariable long idStudent, Principal principal) {
-		groupeService.acceptStudentInGroupe(idGroupe, idStudent, principal);
-		return new ResponseEntity<>( HttpStatus.OK);
+		 return new ResponseEntity<Groupe>( groupeService.acceptStudentInGroupe(idGroupe, idStudent),HttpStatus.OK);
+	
 	}
 	
 	@PostMapping("/join/{id}")
 	public ResponseEntity<?> joinGroupe(@PathVariable long id) {
 		
-		return new ResponseEntity<String>( groupeService.JoinGroupe(id), HttpStatus.OK);
+		return new ResponseEntity<Groupe>( groupeService.JoinGroupe(id), HttpStatus.OK);
 	}
 	
 	@PostMapping("/leave/{id}/{idStudent}")
 	public ResponseEntity<?> leaveGroupe(@PathVariable long id  , @PathVariable long idStudent) {
-		groupeService.leaveGroupe(id, idStudent);
-		return new ResponseEntity<>( HttpStatus.OK);
+		return new ResponseEntity<Groupe>(groupeService.leaveGroupe(id, idStudent), HttpStatus.OK);
+		
 	}
 	@GetMapping("/{id}")
 	public ResponseEntity<?> getGroupe(@PathVariable long id ) {
@@ -92,7 +94,7 @@ public class GroupeController {
 	
 	@GetMapping("/students/{id}")
 	public ResponseEntity<?> getStudents(@PathVariable long id ) {
-		return new ResponseEntity<Iterable<Student>> ( groupeService.getAllStudentByGroupe(id),HttpStatus.OK);
+		return new ResponseEntity<Iterable<Person>> ( groupeService.getAllUsersByGroupe(id),HttpStatus.OK);
 	}
 
 }

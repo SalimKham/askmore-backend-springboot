@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.v2.DbxClientV2;
 import com.dropbox.core.v2.files.FileMetadata;
+import com.dropbox.core.v2.files.WriteMode;
 import com.dropbox.core.v2.sharing.RequestedVisibility;
 import com.dropbox.core.v2.sharing.SharedLinkSettings;
 
@@ -100,12 +101,12 @@ public class ProfileService {
 				BufferedImage b = ImageUtils.crop(img.getImage(),crop.getX(),crop.getY(), crop.getWith(),crop.getHeight()	);
 			    BufferedImage b2 = ImageUtils.resize(b, crop.getWith(), crop.getHeight(), 200,200);
 
-			     String imageName = "profileimage"+ImageUtils.getRandomName();
+			     String imageName = "profileimage"+profileId;
 			 
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				ImageIO.write( b2, "png", baos );
 				baos.flush();
-				client.files().uploadBuilder("/images/"+imageName+".png")
+				client.files().uploadBuilder("/images/"+imageName+".png").withMode(WriteMode.OVERWRITE)
 		                .uploadAndFinish(new ByteArrayInputStream(baos.toByteArray()));
 	            image_url = client.sharing().createSharedLinkWithSettings("/images/"+imageName+".png", SharedLinkSettings.newBuilder().withRequestedVisibility(RequestedVisibility.PUBLIC).build()).getUrl();
 	            image_url = image_url.substring(0,image_url.lastIndexOf('.')) +".png?raw=1";
@@ -114,7 +115,7 @@ public class ProfileService {
 	            ImageIO.write( b2, "png", baos );
 				baos.flush();
 
-				client.files().uploadBuilder("/images/"+imageName+"2.png")
+				client.files().uploadBuilder("/images/"+imageName+"2.png").withMode(WriteMode.OVERWRITE)
                 .uploadAndFinish(new ByteArrayInputStream(baos.toByteArray()));
         String image_url2 = client.sharing().createSharedLinkWithSettings("/images/"+imageName+"2.png", SharedLinkSettings.newBuilder().withRequestedVisibility(RequestedVisibility.PUBLIC).build()).getUrl();
         image_url2 = image_url2.substring(0,image_url2.lastIndexOf('.')) +".png?raw=1";

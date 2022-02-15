@@ -31,6 +31,7 @@ import io.khaminfo.askmore.repositories.QuestionRepository;
 import io.khaminfo.askmore.repositories.QuestionnaryRepository;
 import io.khaminfo.askmore.repositories.ResponseRepository;
 import io.khaminfo.askmore.repositories.SubjectRepository;
+import io.khaminfo.askmore.repositories.TeacherRepository;
 import io.khaminfo.askmore.repositories.TutorialRepository;
 
 @Service
@@ -45,8 +46,10 @@ public class TutorialService {
 	private QuestionRepository questionRepository;
 	@Autowired
 	private ResponseRepository responseRepository;
+	
 	@Autowired
-	private GroupeService groupeService;
+	private TeacherRepository teacherlRepository;
+	
 	private static final String ACCESS_TOKEN = "z62njhqXOzEAAAAAAAAAAZML1_3JqgmU_SOJ8J0KP-xZUDt0ON0CSBMHWWqMNhpC";
 	DbxRequestConfig config = DbxRequestConfig.newBuilder("dropbox/ask-more").build();
     DbxClientV2 client = new DbxClientV2(config, ACCESS_TOKEN);
@@ -69,18 +72,8 @@ public class TutorialService {
              }
              
              if(allowedGroupes.length() != 0) {
-            	 Iterable<Groupe> result = new ArrayList<>();
-            	 List<Groupe> list = new ArrayList<>();
-            	 
-            	 result = groupeService.getTeacherGroupes();
-            	  for (Groupe groupe: result) {
-            		 
-      	            if (allowedGroupes.indexOf(""+groupe.getId()) != -1) {
-      	            	
-      	                list.add(groupe);
-      	            }
-      	        }
-            	  tutorial.setAllowedGroupes(list);
+            	
+            	  tutorial.setAllowedGroupes(allowedGroupes);
              }
              tutorial.setTeacher((Teacher) user);
 	         tutorial.setSubject(subjectRepository.getById(subject));
@@ -97,8 +90,32 @@ public class TutorialService {
 
 
 	public Tutorial getTutorialById(long id) {
-		tutorialRepository.updateNbrVisits(id);
-		return tutorialRepository.getById(id);
+		Person user = (Person) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		
+		Tutorial t  = tutorialRepository.getById(id);
+		if(user.getType() == 3 && t.getTeacher().getId()!= user.getId()) {
+			System.out.println("getting tutorial");
+			Teacher teacher = teacherlRepository.getById(user.getId());
+			System.out.println(teacher.getJoinedGroupes());
+			if(teacher.getJoinedGroupes() == null || teacher.getJoinedGroupes().length() == 0)
+				throw new AccessException("This Tutorial is private!");
+			String [] joinedGroupes = teacher.getJoinedGroupes().split("/");
+			boolean access = false;
+			for (String groupe_id : joinedGroupes) {
+				if(t.getAllowedGroupes().indexOf(groupe_id)!=-1)
+				{
+					access = true;
+					break;
+				}
+			}
+			if(!access)
+				throw new AccessException("THIS TUTORIAL IS PRIVATE !");
+		}
+		
+	       tutorialRepository.updateNbrVisits(id);
+		   t.setNbrVisitor(t.getNbrVisitor()+1);
+		
+		return t;
 	}
 	
 	public Questionnary addQuestionnary(Long id ,String [] questionsArry, String [] ResponsesArray) {
@@ -150,12 +167,22 @@ public class TutorialService {
 	}
 
 
-	public Iterable<Tutorial> getAll() {
-		// TODO Auto-generated method stub
-		return tutorialRepository.findAll();
+	public Iterable<Tutorial> getAll(long subjectID,int page,int range) {
+		
+		long minID = page * range;
+		long maxID = minID + range;
+		System.out.println("getting tutorials for "+subjectID +", "+minID +", "+maxID);
+		if(subjectID == 0)
+		return tutorialRepository.getTutorialsByRange(minID, maxID);
+		else {
+			
+		 return tutorialRepository.getTutorialsBySubjectAndRange(subjectRepository.getById(subjectID),minID,maxID);
+		}
 	}
 
-
+   public long totalNBR() {
+	   return 10; //tutorialRepository.count();
+   }
 	public void delete(long id) {
 		Person user = (Person) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		Tutorial tutorial = tutorialRepository.getById(id);
