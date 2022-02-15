@@ -181,7 +181,7 @@ public class TutorialService {
 	}
 
    public long totalNBR() {
-	   return 10; //tutorialRepository.count();
+	   return tutorialRepository.count();
    }
 	public void delete(long id) {
 		Person user = (Person) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
