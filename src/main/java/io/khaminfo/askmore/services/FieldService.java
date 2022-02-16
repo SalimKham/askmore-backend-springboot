@@ -72,7 +72,7 @@ public class FieldService {
 				throw new AccessException("Access Denied!!!!");
 			}
 		   fieldRepository.deleteById(id);	
-		
+		ScriptToDropBox.change = true;
 	}
 
 	public Subject addSubject(long id_field, @Valid Subject subject, Principal principal) {
@@ -86,7 +86,9 @@ public class FieldService {
 				throw new AccessException("This field is archived Please Choose Another Field");
 				
 			subject.setField(field);
-			return subjectRepository.save(subject);
+			Subject s = subjectRepository.save(subject);
+			ScriptToDropBox.change = true;
+			return s;
 		}catch (Exception e) {
 			if(e.getClass() == AccessException.class)
 				throw e;
@@ -103,7 +105,8 @@ public class FieldService {
 		if(user.getType()!=1) {
 			throw new AccessException("Access Denied!!!!");
 		}
-	   subjectRepository.deleteById(id);	
+	   subjectRepository.deleteById(id);
+		ScriptToDropBox.change = true;
 		
 	}
 
