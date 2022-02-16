@@ -97,7 +97,7 @@ public class TutorialService {
 			System.out.println("getting tutorial");
 			Teacher teacher = teacherlRepository.getById(user.getId());
 			System.out.println(teacher.getJoinedGroupes());
-			if(teacher.getJoinedGroupes() == null || teacher.getJoinedGroupes().length() == 0)
+			if(t.getAllowedGroupes()!=''&&(teacher.getJoinedGroupes() == null || teacher.getJoinedGroupes().length() == 0) )
 				throw new AccessException("This Tutorial is private!");
 			String [] joinedGroupes = teacher.getJoinedGroupes().split("/");
 			boolean access = false;
